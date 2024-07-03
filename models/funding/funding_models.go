@@ -1,6 +1,9 @@
 package funding
 
-import "github.com/amir-the-h/okex"
+import (
+	"github.com/shopspring/decimal"
+	"github.com/ward-cap/go-okx"
+)
 
 type (
 	Currency struct {
@@ -21,19 +24,19 @@ type (
 		AvailBal  string `json:"availBal"`
 	}
 	Transfer struct {
-		TransID string           `json:"transId"`
-		Ccy     string           `json:"ccy"`
-		Amt     okex.JSONFloat64 `json:"amt"`
-		From    okex.AccountType `json:"from,string"`
-		To      okex.AccountType `json:"to,string"`
+		TransID string              `json:"transId"`
+		Ccy     string              `json:"ccy"`
+		Amt     decimal.NullDecimal `json:"amt"`
+		From    okex.AccountType    `json:"from,string"`
+		To      okex.AccountType    `json:"to,string"`
 	}
 	Bill struct {
-		BillID string           `json:"billId"`
-		Ccy    string           `json:"ccy"`
-		Bal    okex.JSONFloat64 `json:"bal"`
-		BalChg okex.JSONFloat64 `json:"balChg"`
-		Type   okex.BillType    `json:"type,string"`
-		TS     okex.JSONTime    `json:"ts"`
+		BillID string              `json:"billId"`
+		Ccy    string              `json:"ccy"`
+		Bal    decimal.NullDecimal `json:"bal"`
+		BalChg decimal.NullDecimal `json:"balChg"`
+		Type   okex.BillType       `json:"type,string"`
+		TS     okex.JSONTime       `json:"ts"`
 	}
 	DepositAddress struct {
 		Addr     string           `json:"addr"`
@@ -48,21 +51,21 @@ type (
 		TS       okex.JSONTime    `json:"ts"`
 	}
 	DepositHistory struct {
-		Ccy   string            `json:"ccy"`
-		Chain string            `json:"chain"`
-		TxID  string            `json:"txId"`
-		From  string            `json:"from"`
-		To    string            `json:"to"`
-		DepId string            `json:"depId"`
-		Amt   okex.JSONFloat64  `json:"amt"`
-		State okex.DepositState `json:"state,string"`
-		TS    okex.JSONTime     `json:"ts"`
+		Ccy   string              `json:"ccy"`
+		Chain string              `json:"chain"`
+		TxID  string              `json:"txId"`
+		From  string              `json:"from"`
+		To    string              `json:"to"`
+		DepId string              `json:"depId"`
+		Amt   decimal.NullDecimal `json:"amt"`
+		State okex.DepositState   `json:"state,string"`
+		TS    okex.JSONTime       `json:"ts"`
 	}
 	Withdrawal struct {
-		Ccy   string           `json:"ccy"`
-		Chain string           `json:"chain"`
-		WdID  okex.JSONInt64   `json:"wdId"`
-		Amt   okex.JSONFloat64 `json:"amt"`
+		Ccy   string              `json:"ccy"`
+		Chain string              `json:"chain"`
+		WdID  decimal.NullDecimal `json:"wdId"`
+		Amt   decimal.NullDecimal `json:"amt"`
 	}
 	WithdrawalHistory struct {
 		Ccy   string               `json:"ccy"`
@@ -73,20 +76,20 @@ type (
 		Tag   string               `json:"tag,omitempty"`
 		PmtID string               `json:"pmtId,omitempty"`
 		Memo  string               `json:"memo,omitempty"`
-		Amt   okex.JSONFloat64     `json:"amt"`
-		Fee   okex.JSONFloat64     `json:"fee"`
-		WdID  okex.JSONInt64       `json:"wdId"`
+		Amt   decimal.NullDecimal  `json:"amt"`
+		Fee   decimal.NullDecimal  `json:"fee"`
+		WdID  decimal.NullDecimal  `json:"wdId"`
 		State okex.WithdrawalState `json:"state,string"`
 		TS    okex.JSONTime        `json:"ts"`
 	}
 	PiggyBank struct {
-		Ccy  string           `json:"ccy"`
-		Amt  okex.JSONFloat64 `json:"amt"`
-		Side okex.ActionType  `json:"side,string"`
+		Ccy  string              `json:"ccy"`
+		Amt  decimal.NullDecimal `json:"amt"`
+		Side okex.ActionType     `json:"side,string"`
 	}
 	PiggyBankBalance struct {
-		Ccy      string           `json:"ccy"`
-		Amt      okex.JSONFloat64 `json:"amt"`
-		Earnings okex.JSONFloat64 `json:"earnings"`
+		Ccy      string              `json:"ccy"`
+		Amt      decimal.NullDecimal `json:"amt"`
+		Earnings decimal.NullDecimal `json:"earnings"`
 	}
 )

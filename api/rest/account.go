@@ -2,9 +2,10 @@ package rest
 
 import (
 	"encoding/json"
-	"github.com/amir-the-h/okex"
-	requests "github.com/amir-the-h/okex/requests/rest/account"
-	responses "github.com/amir-the-h/okex/responses/account"
+	"github.com/ward-cap/go-okx"
+	requests "github.com/ward-cap/go-okx/requests/rest/account"
+	responses "github.com/ward-cap/go-okx/responses/account"
+	"io"
 	"net/http"
 	"strings"
 )
@@ -69,7 +70,7 @@ func (c *Account) GetPositions(req requests.GetPositions) (response responses.Ge
 // GetAccountAndPositionRisk
 // Get account and position risk
 //
-// https://www.okex.com/docs-v5/en/#rest-api-account-get-account-and-position-risk
+// https://wwwerr.okex.com/docs-v5/en/#rest-api-account-get-account-and-position-risk
 func (c *Account) GetAccountAndPositionRisk(req requests.GetAccountAndPositionRisk) (response responses.GetAccountAndPositionRisk, err error) {
 	p := "/api/v5/account/positions"
 	m := okex.S2M(req)
@@ -95,7 +96,7 @@ func (c *Account) GetAccountAndPositionRisk(req requests.GetAccountAndPositionRi
 func (c *Account) GetBills(req requests.GetBills, arc bool) (response responses.GetBills, err error) {
 	p := "/api/v5/account/bills"
 	if arc {
-		p = "/api/account/bills-archive"
+		p = "/api/v5/account/bills-archive"
 	}
 	m := okex.S2M(req)
 	res, err := c.client.Do(http.MethodGet, p, true, m)
@@ -103,8 +104,9 @@ func (c *Account) GetBills(req requests.GetBills, arc bool) (response responses.
 		return
 	}
 	defer res.Body.Close()
-	d := json.NewDecoder(res.Body)
-	err = d.Decode(&response)
+	all, _ := io.ReadAll(res.Body)
+	err = json.Unmarshal(all, &response)
+	//err = d.Decode()
 
 	return
 }

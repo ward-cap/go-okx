@@ -1,29 +1,30 @@
 package trade
 
 import (
-	"github.com/amir-the-h/okex"
+	"github.com/shopspring/decimal"
+	"github.com/ward-cap/go-okx"
 )
 
 type (
 	PlaceOrder struct {
-		ClOrdID string           `json:"clOrdId"`
-		Tag     string           `json:"tag"`
-		SMsg    string           `json:"sMsg"`
-		SCode   okex.JSONInt64   `json:"sCode"`
-		OrdID   okex.JSONFloat64 `json:"ordId"`
+		ClOrdID string              `json:"clOrdId"`
+		Tag     string              `json:"tag"`
+		SMsg    string              `json:"sMsg"`
+		SCode   decimal.NullDecimal `json:"sCode"`
+		OrdID   decimal.NullDecimal `json:"ordId"`
 	}
 	CancelOrder struct {
-		OrdID   string           `json:"ordId"`
-		ClOrdID string           `json:"clOrdId"`
-		SMsg    string           `json:"sMsg"`
-		SCode   okex.JSONFloat64 `json:"sCode"`
+		OrdID   string              `json:"ordId"`
+		ClOrdID string              `json:"clOrdId"`
+		SMsg    string              `json:"sMsg"`
+		SCode   decimal.NullDecimal `json:"sCode"`
 	}
 	AmendOrder struct {
-		OrdID   string           `json:"ordId"`
-		ClOrdID string           `json:"clOrdId"`
-		ReqID   string           `json:"reqId"`
-		SMsg    string           `json:"sMsg"`
-		SCode   okex.JSONFloat64 `json:"sCode"`
+		OrdID   string              `json:"ordId"`
+		ClOrdID string              `json:"clOrdId"`
+		ReqID   string              `json:"reqId"`
+		SMsg    string              `json:"sMsg"`
+		SCode   decimal.NullDecimal `json:"sCode"`
 	}
 	ClosePosition struct {
 		InstID  string            `json:"instId"`
@@ -39,21 +40,21 @@ type (
 		Category    string              `json:"category"`
 		FeeCcy      string              `json:"feeCcy"`
 		RebateCcy   string              `json:"rebateCcy"`
-		Px          okex.JSONFloat64    `json:"px"`
-		Sz          okex.JSONFloat64    `json:"sz"`
-		Pnl         okex.JSONFloat64    `json:"pnl"`
-		AccFillSz   okex.JSONFloat64    `json:"accFillSz"`
-		FillPx      okex.JSONFloat64    `json:"fillPx"`
-		FillSz      okex.JSONFloat64    `json:"fillSz"`
-		FillTime    okex.JSONFloat64    `json:"fillTime"`
-		AvgPx       okex.JSONFloat64    `json:"avgPx"`
-		Lever       okex.JSONFloat64    `json:"lever"`
-		TpTriggerPx okex.JSONFloat64    `json:"tpTriggerPx"`
-		TpOrdPx     okex.JSONFloat64    `json:"tpOrdPx"`
-		SlTriggerPx okex.JSONFloat64    `json:"slTriggerPx"`
-		SlOrdPx     okex.JSONFloat64    `json:"slOrdPx"`
-		Fee         okex.JSONFloat64    `json:"fee"`
-		Rebate      okex.JSONFloat64    `json:"rebate"`
+		Px          decimal.NullDecimal `json:"px"`
+		Sz          decimal.NullDecimal `json:"sz"`
+		Pnl         decimal.NullDecimal `json:"pnl"`
+		AccFillSz   decimal.NullDecimal `json:"accFillSz"`
+		FillPx      decimal.NullDecimal `json:"fillPx"`
+		FillSz      decimal.NullDecimal `json:"fillSz"`
+		FillTime    decimal.NullDecimal `json:"fillTime"`
+		AvgPx       decimal.NullDecimal `json:"avgPx"`
+		Lever       decimal.NullDecimal `json:"lever"`
+		TpTriggerPx decimal.NullDecimal `json:"tpTriggerPx"`
+		TpOrdPx     decimal.NullDecimal `json:"tpOrdPx"`
+		SlTriggerPx decimal.NullDecimal `json:"slTriggerPx"`
+		SlOrdPx     decimal.NullDecimal `json:"slOrdPx"`
+		Fee         decimal.NullDecimal `json:"fee"`
+		Rebate      decimal.NullDecimal `json:"rebate"`
 		State       okex.OrderState     `json:"state"`
 		TdMode      okex.TradeMode      `json:"tdMode"`
 		PosSide     okex.PositionSide   `json:"posSide"`
@@ -70,11 +71,11 @@ type (
 		TradeID  string              `json:"tradeId"`
 		ClOrdID  string              `json:"clOrdId"`
 		BillID   string              `json:"billId"`
-		Tag      okex.JSONFloat64    `json:"tag"`
-		FillPx   okex.JSONFloat64    `json:"fillPx"`
-		FillSz   okex.JSONFloat64    `json:"fillSz"`
-		FeeCcy   okex.JSONFloat64    `json:"feeCcy"`
-		Fee      okex.JSONFloat64    `json:"fee"`
+		Tag      decimal.NullDecimal `json:"tag"`
+		FillPx   decimal.NullDecimal `json:"fillPx"`
+		FillSz   decimal.NullDecimal `json:"fillSz"`
+		FeeCcy   decimal.NullDecimal `json:"feeCcy"`
+		Fee      decimal.NullDecimal `json:"fee"`
 		InstType okex.InstrumentType `json:"instType"`
 		Side     okex.OrderSide      `json:"side"`
 		PosSide  okex.PositionSide   `json:"posSide"`
@@ -82,14 +83,14 @@ type (
 		TS       okex.JSONTime       `json:"ts"`
 	}
 	PlaceAlgoOrder struct {
-		AlgoID string         `json:"algoId"`
-		SMsg   string         `json:"sMsg"`
-		SCode  okex.JSONInt64 `json:"sCode"`
+		AlgoID string              `json:"algoId"`
+		SMsg   string              `json:"sMsg"`
+		SCode  decimal.NullDecimal `json:"sCode"`
 	}
 	CancelAlgoOrder struct {
-		AlgoID string         `json:"algoId"`
-		SMsg   string         `json:"sMsg"`
-		SCode  okex.JSONInt64 `json:"sCode"`
+		AlgoID string              `json:"algoId"`
+		SMsg   string              `json:"sMsg"`
+		SCode  decimal.NullDecimal `json:"sCode"`
 	}
 	AlgoOrder struct {
 		InstID       string              `json:"instId"`
@@ -103,28 +104,28 @@ type (
 		FeeCcy       string              `json:"feeCcy"`
 		RebateCcy    string              `json:"rebateCcy"`
 		TimeInterval string              `json:"timeInterval"`
-		Px           okex.JSONFloat64    `json:"px"`
-		PxVar        okex.JSONFloat64    `json:"pxVar"`
-		PxSpread     okex.JSONFloat64    `json:"pxSpread"`
-		PxLimit      okex.JSONFloat64    `json:"pxLimit"`
-		Sz           okex.JSONFloat64    `json:"sz"`
-		SzLimit      okex.JSONFloat64    `json:"szLimit"`
-		ActualSz     okex.JSONFloat64    `json:"actualSz"`
-		ActualPx     okex.JSONFloat64    `json:"actualPx"`
-		Pnl          okex.JSONFloat64    `json:"pnl"`
-		AccFillSz    okex.JSONFloat64    `json:"accFillSz"`
-		FillPx       okex.JSONFloat64    `json:"fillPx"`
-		FillSz       okex.JSONFloat64    `json:"fillSz"`
-		FillTime     okex.JSONFloat64    `json:"fillTime"`
-		AvgPx        okex.JSONFloat64    `json:"avgPx"`
-		Lever        okex.JSONFloat64    `json:"lever"`
-		TpTriggerPx  okex.JSONFloat64    `json:"tpTriggerPx"`
-		TpOrdPx      okex.JSONFloat64    `json:"tpOrdPx"`
-		SlTriggerPx  okex.JSONFloat64    `json:"slTriggerPx"`
-		SlOrdPx      okex.JSONFloat64    `json:"slOrdPx"`
-		OrdPx        okex.JSONFloat64    `json:"ordPx"`
-		Fee          okex.JSONFloat64    `json:"fee"`
-		Rebate       okex.JSONFloat64    `json:"rebate"`
+		Px           decimal.NullDecimal `json:"px"`
+		PxVar        decimal.NullDecimal `json:"pxVar"`
+		PxSpread     decimal.NullDecimal `json:"pxSpread"`
+		PxLimit      decimal.NullDecimal `json:"pxLimit"`
+		Sz           decimal.NullDecimal `json:"sz"`
+		SzLimit      decimal.NullDecimal `json:"szLimit"`
+		ActualSz     decimal.NullDecimal `json:"actualSz"`
+		ActualPx     decimal.NullDecimal `json:"actualPx"`
+		Pnl          decimal.NullDecimal `json:"pnl"`
+		AccFillSz    decimal.NullDecimal `json:"accFillSz"`
+		FillPx       decimal.NullDecimal `json:"fillPx"`
+		FillSz       decimal.NullDecimal `json:"fillSz"`
+		FillTime     decimal.NullDecimal `json:"fillTime"`
+		AvgPx        decimal.NullDecimal `json:"avgPx"`
+		Lever        decimal.NullDecimal `json:"lever"`
+		TpTriggerPx  decimal.NullDecimal `json:"tpTriggerPx"`
+		TpOrdPx      decimal.NullDecimal `json:"tpOrdPx"`
+		SlTriggerPx  decimal.NullDecimal `json:"slTriggerPx"`
+		SlOrdPx      decimal.NullDecimal `json:"slOrdPx"`
+		OrdPx        decimal.NullDecimal `json:"ordPx"`
+		Fee          decimal.NullDecimal `json:"fee"`
+		Rebate       decimal.NullDecimal `json:"rebate"`
 		State        okex.OrderState     `json:"state"`
 		TdMode       okex.TradeMode      `json:"tdMode"`
 		ActualSide   okex.PositionSide   `json:"actualSide"`

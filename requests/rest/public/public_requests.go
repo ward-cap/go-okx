@@ -1,6 +1,9 @@
 package public
 
-import "github.com/amir-the-h/okex"
+import (
+	"github.com/shopspring/decimal"
+	"github.com/ward-cap/go-okx"
+)
 
 type (
 	GetInstruments struct {
@@ -61,7 +64,7 @@ type (
 		Uly      string              `json:"uly,omitempty"`
 		InstType okex.InstrumentType `json:"instType"`
 		TdMode   okex.TradeMode      `json:"tdMode"`
-		Tier     okex.JSONInt64      `json:"tier,omitempty"`
+		Tier     decimal.NullDecimal `json:"tier,omitempty"`
 	}
 	GetUnderlying struct {
 		InstType okex.InstrumentType `json:"instType"`

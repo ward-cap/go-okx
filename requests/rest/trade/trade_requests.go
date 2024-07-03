@@ -1,7 +1,7 @@
 package trade
 
 import (
-	"github.com/amir-the-h/okex"
+	"github.com/ward-cap/go-okx"
 )
 
 type (

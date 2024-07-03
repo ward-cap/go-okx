@@ -1,7 +1,8 @@
 package subaccount
 
 import (
-	"github.com/amir-the-h/okex"
+	"github.com/shopspring/decimal"
+	"github.com/ward-cap/go-okx"
 )
 
 type (
@@ -24,13 +25,13 @@ type (
 		TS         okex.JSONTime `json:"ts,omitempty"`
 	}
 	HistoryTransfer struct {
-		SubAcct string         `json:"subAcct,omitempty"`
-		Ccy     string         `json:"ccy,omitempty"`
-		BillID  okex.JSONInt64 `json:"billId,omitempty"`
-		Type    okex.BillType  `json:"type,omitempty,string"`
-		TS      okex.JSONTime  `json:"ts,omitempty"`
+		SubAcct string              `json:"subAcct,omitempty"`
+		Ccy     string              `json:"ccy,omitempty"`
+		BillID  decimal.NullDecimal `json:"billId,omitempty"`
+		Type    okex.BillType       `json:"type,omitempty,string"`
+		TS      okex.JSONTime       `json:"ts,omitempty"`
 	}
 	Transfer struct {
-		TransID okex.JSONInt64 `json:"transId"`
+		TransID decimal.NullDecimal `json:"transId"`
 	}
 )
