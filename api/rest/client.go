@@ -24,6 +24,7 @@ type ClientRest struct {
 	Market      *Market
 	PublicData  *PublicData
 	TradeData   *TradeData
+	Affiliate   *Affiliate
 	apiKey      string
 	secretKey   []byte
 	passphrase  string
@@ -49,6 +50,7 @@ func NewClient(apiKey, secretKey, passphrase string, baseURL okex.BaseURL, desti
 	c.Market = NewMarket(c)
 	c.PublicData = NewPublicData(c)
 	c.TradeData = NewTradeData(c)
+	c.Affiliate = NewAffiliate(c)
 	return c
 }
 
@@ -126,11 +128,10 @@ func (c *ClientRest) Status(req requests.Status) (response responses.Status, err
 }
 
 func (c *ClientRest) sign(method, path, body string) (string, string) {
-	format := "2006-01-02T15:04:05.999Z07:00"
-	t := time.Now().UTC().Format(format)
-	ts := fmt.Sprint(t)
-	s := ts + method + path + body
-	p := []byte(s)
+	const format = "2006-01-02T15:04:05.999Z07:00"
+
+	ts := time.Now().UTC().Format(format)
+	p := []byte(ts + method + path + body)
 	h := hmac.New(sha256.New, c.secretKey)
 	h.Write(p)
 	return ts, base64.StdEncoding.EncodeToString(h.Sum(nil))
