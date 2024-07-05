@@ -2,6 +2,7 @@ package rest
 
 import (
 	"bytes"
+	"context"
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/base64"
@@ -54,8 +55,7 @@ func NewClient(apiKey, secretKey, passphrase string, baseURL okex.BaseURL, desti
 	return c
 }
 
-// Do the http request to the server
-func (c *ClientRest) Do(method, path string, private bool, params ...map[string]string) (*http.Response, error) {
+func (c *ClientRest) DoWithContext(ctx context.Context, method, path string, private bool, params ...map[string]string) (*http.Response, error) {
 	u := fmt.Sprintf("%s%s", c.baseURL, path)
 	var (
 		r    *http.Request
@@ -64,7 +64,7 @@ func (c *ClientRest) Do(method, path string, private bool, params ...map[string]
 		body string
 	)
 	if method == http.MethodGet {
-		r, err = http.NewRequest(http.MethodGet, u, nil)
+		r, err = http.NewRequestWithContext(ctx, http.MethodGet, u, nil)
 		if err != nil {
 			return nil, err
 		}
@@ -88,15 +88,13 @@ func (c *ClientRest) Do(method, path string, private bool, params ...map[string]
 		if body == "{}" {
 			body = ""
 		}
-		r, err = http.NewRequest(method, u, bytes.NewBuffer(j))
+		r, err = http.NewRequestWithContext(ctx, method, u, bytes.NewBuffer(j))
 		if err != nil {
 			return nil, err
 		}
 		r.Header.Add("Content-Type", "application/json")
 	}
-	if err != nil {
-		return nil, err
-	}
+
 	if private {
 		timestamp, sign := c.sign(method, path, body)
 		r.Header.Add("OK-ACCESS-KEY", c.apiKey)
@@ -104,10 +102,17 @@ func (c *ClientRest) Do(method, path string, private bool, params ...map[string]
 		r.Header.Add("OK-ACCESS-SIGN", sign)
 		r.Header.Add("OK-ACCESS-TIMESTAMP", timestamp)
 	}
+
 	if c.destination == okex.DemoServer {
 		r.Header.Add("x-simulated-trading", "1")
 	}
+
 	return c.client.Do(r)
+}
+
+// Do the http request to the server
+func (c *ClientRest) Do(method, path string, private bool, params ...map[string]string) (*http.Response, error) {
+	return c.DoWithContext(context.Background(), method, path, private, params...)
 }
 
 // Status
