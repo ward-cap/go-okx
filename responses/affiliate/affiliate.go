@@ -3,6 +3,7 @@ package affiliate
 import (
 	"github.com/shopspring/decimal"
 	okex "github.com/ward-cap/go-okx"
+	"github.com/ward-cap/go-okx/responses"
 )
 
 type InviteeData struct {
@@ -21,7 +22,6 @@ type InviteeData struct {
 }
 
 type InviteeResponse struct {
-	Msg  string        `json:"msg"`
-	Code string        `json:"code"`
+	responses.Basic
 	Data []InviteeData `json:"data"`
 }
