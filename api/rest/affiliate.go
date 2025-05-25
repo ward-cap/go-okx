@@ -5,7 +5,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/ward-cap/go-okx/responses"
 	"github.com/ward-cap/go-okx/responses/affiliate"
+	"io"
 	"net/http"
 )
 
@@ -48,9 +50,24 @@ func (c *Affiliate) IsMyRefer(ctx context.Context, apiKey string) (t affiliate.I
 	if err != nil {
 		return
 	}
-
-	//goland:noinspection GoUnhandledErrorResult
 	defer res.Body.Close()
+
+	respBytes, err := io.ReadAll(res.Body)
+	if err != nil {
+		return
+	}
+
+	// diff types when error https://prnt.sc/xclTMhruOANh
+
+	var basic responses.Basic
+	err = json.Unmarshal(respBytes, &basic)
+	if err != nil {
+		return
+	}
+
+	if basic.Code != 0 {
+		return affiliate.IsReferResponse{}, errors.New(basic.Msg)
+	}
 
 	err = json.NewDecoder(res.Body).Decode(&t)
 
