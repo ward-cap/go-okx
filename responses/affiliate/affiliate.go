@@ -25,3 +25,11 @@ type InviteeResponse struct {
 	responses.Basic
 	Data []InviteeData `json:"data"`
 }
+
+type IsReferResponse struct {
+	responses.Basic
+	Data struct {
+		Result bool   `json:"result"`
+		Type   string `json:"type"`
+	} `json:"data"`
+}
