@@ -69,7 +69,7 @@ func (c *Affiliate) IsMyRefer(ctx context.Context, apiKey string) (t affiliate.I
 		return affiliate.IsReferResponse{}, errors.New(basic.Msg)
 	}
 
-	err = json.NewDecoder(res.Body).Decode(&t)
+	err = json.Unmarshal(respBytes, &t)
 
 	return
 }
