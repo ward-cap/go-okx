@@ -1,6 +1,7 @@
 package rest
 
 import (
+	"context"
 	"encoding/json"
 	"github.com/ward-cap/go-okx"
 	requests "github.com/ward-cap/go-okx/requests/rest/account"
@@ -115,9 +116,9 @@ func (c *Account) GetBills(req requests.GetBills, arc bool) (response responses.
 // Retrieve current account configuration.
 //
 // https://www.okex.com/docs-v5/en/#rest-api-account-get-account-configuration
-func (c *Account) GetConfig() (response responses.GetConfig, err error) {
+func (c *Account) GetConfig(ctx context.Context) (response responses.GetConfig, err error) {
 	p := "/api/v5/account/config"
-	res, err := c.client.Do(http.MethodGet, p, true)
+	res, err := c.client.DoWithContext(ctx, http.MethodGet, p, true)
 	if err != nil {
 		return
 	}
