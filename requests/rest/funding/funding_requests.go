@@ -37,10 +37,10 @@ type (
 		Ccy    string                     `json:"ccy"`
 		Chain  string                     `json:"chain,omitempty"`
 		ToAddr string                     `json:"toAddr"`
-		Pwd    string                     `json:"pwd"`
-		Amt    float64                    `json:"amt,string"`
-		Fee    float64                    `json:"fee,string"`
+		Amt    string                     `json:"amt"`
 		Dest   okex.WithdrawalDestination `json:"dest,string"`
+		//Fee    float64                    `json:"fee,string"`
+		//Pwd    string                     `json:"pwd"`
 	}
 	GetWithdrawalHistory struct {
 		Ccy    string               `json:"ccy,omitempty"`
