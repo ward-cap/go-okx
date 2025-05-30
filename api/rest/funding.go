@@ -1,6 +1,7 @@
 package rest
 
 import (
+	"context"
 	"encoding/json"
 	"github.com/ward-cap/go-okx"
 	requests "github.com/ward-cap/go-okx/requests/rest/funding"
@@ -98,10 +99,10 @@ func (c *Funding) AssetBillsDetails(req requests.AssetBillsDetails) (response re
 // Retrieve the deposit addresses of currencies, including previously-used addresses.
 //
 // https://www.okex.com/docs-v5/en/#rest-api-funding-get-deposit-address
-func (c *Funding) GetDepositAddress(req requests.GetDepositAddress) (response responses.GetDepositAddress, err error) {
+func (c *Funding) GetDepositAddress(ctx context.Context, req requests.GetDepositAddress) (response responses.GetDepositAddress, err error) {
 	p := "/api/v5/asset/deposit-address"
 	m := okex.S2M(req)
-	res, err := c.client.Do(http.MethodGet, p, true, m)
+	res, err := c.client.DoWithContext(ctx, http.MethodGet, p, true, m)
 	if err != nil {
 		return
 	}
