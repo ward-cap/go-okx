@@ -3,8 +3,10 @@ package rest
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"github.com/ward-cap/go-okx"
 	requests "github.com/ward-cap/go-okx/requests/rest/funding"
+	responses2 "github.com/ward-cap/go-okx/responses"
 	responses "github.com/ward-cap/go-okx/responses/funding"
 	"io"
 	"net/http"
@@ -154,7 +156,20 @@ func (c *Funding) Withdrawal(req requests.Withdrawal) (response responses.Withdr
 			With("response", string(all)).
 			Info("withdrawal data")
 	}
+
+	var basic responses2.Basic
+	err = json.Unmarshal(all, &basic)
+	if err != nil {
+		return
+	}
+
+	if basic.Code != 0 {
+		err = errors.New(basic.Msg)
+		return
+	}
+
 	err = json.Unmarshal(all, &response)
+
 	return
 }
 
