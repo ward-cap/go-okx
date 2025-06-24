@@ -11,6 +11,7 @@ import (
 	"github.com/ward-cap/go-okx"
 	requests "github.com/ward-cap/go-okx/requests/rest/public"
 	responses "github.com/ward-cap/go-okx/responses/public_data"
+	"go.uber.org/zap"
 	"net/http"
 	"strings"
 	"time"
@@ -33,11 +34,18 @@ type ClientRest struct {
 	destination okex.Destination
 	baseURL     okex.BaseURL
 	client      *http.Client
+	Logger      *zap.SugaredLogger
 }
 
 // NewClient returns a pointer to a fresh ClientRest
-func NewClient(apiKey, secretKey, passphrase string, baseURL okex.BaseURL, destination okex.Destination) *ClientRest {
+func NewClient(
+	apiKey, secretKey, passphrase string,
+	baseURL okex.BaseURL,
+	destination okex.Destination,
+	logger *zap.SugaredLogger,
+) *ClientRest {
 	c := &ClientRest{
+		Logger:      logger,
 		apiKey:      apiKey,
 		secretKey:   []byte(secretKey),
 		passphrase:  passphrase,

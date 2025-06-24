@@ -6,6 +6,7 @@ import (
 	"github.com/ward-cap/go-okx"
 	requests "github.com/ward-cap/go-okx/requests/rest/funding"
 	responses "github.com/ward-cap/go-okx/responses/funding"
+	"io"
 	"net/http"
 	"strings"
 )
@@ -141,8 +142,18 @@ func (c *Funding) Withdrawal(req requests.Withdrawal) (response responses.Withdr
 		return
 	}
 	defer res.Body.Close()
-	d := json.NewDecoder(res.Body)
-	err = d.Decode(&response)
+	all, err := io.ReadAll(res.Body)
+	if err != nil {
+		return
+	}
+
+	if lg := c.client.Logger; lg != nil {
+		lg.
+			With("request", m).
+			With("response", string(all)).
+			Info("withdrawal data")
+	}
+	err = json.Unmarshal(all, &response)
 	return
 }
 
