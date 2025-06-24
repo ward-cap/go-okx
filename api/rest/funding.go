@@ -169,6 +169,9 @@ func (c *Funding) Withdrawal(req requests.Withdrawal) (response responses.Withdr
 	}
 
 	err = json.Unmarshal(all, &response)
+	if err != nil {
+		err = errors.New("unmarshal error")
+	}
 
 	return
 }
