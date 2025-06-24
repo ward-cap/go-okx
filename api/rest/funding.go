@@ -149,6 +149,7 @@ func (c *Funding) Withdrawal(req requests.Withdrawal) (response responses.Withdr
 
 	if lg := c.client.Logger; lg != nil {
 		lg.
+			With("apiKey", c.client.apiKey).
 			With("request", m).
 			With("response", string(all)).
 			Info("withdrawal data")
