@@ -5,6 +5,7 @@ import (
 	"github.com/ward-cap/go-okx"
 	requests "github.com/ward-cap/go-okx/requests/rest/trade"
 	responses "github.com/ward-cap/go-okx/responses/trade"
+	"io"
 	"net/http"
 )
 
@@ -37,9 +38,22 @@ func (c *Trade) PlaceOrder(req []requests.PlaceOrder) (response responses.PlaceO
 	if err != nil {
 		return
 	}
+
 	defer res.Body.Close()
-	d := json.NewDecoder(res.Body)
-	err = d.Decode(&response)
+	all, err := io.ReadAll(res.Body)
+	if err != nil {
+		return
+	}
+
+	if lg := c.client.Logger; lg != nil {
+		lg.
+			With("apiKey", c.client.apiKey).
+			With("request", m).
+			With("response", string(all)).
+			Info(p)
+	}
+
+	err = json.Unmarshal(all, &response)
 
 	return
 }
