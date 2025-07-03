@@ -13,13 +13,14 @@ type (
 		QuoteCcy  string                `json:"quoteCcy,omitempty"`
 		SettleCcy string                `json:"settleCcy,omitempty"`
 		CtValCcy  string                `json:"ctValCcy,omitempty"`
-		CtVal     decimal.NullDecimalV2 `json:"ctVal,omitempty"`
-		CtMult    decimal.NullDecimalV2 `json:"ctMult,omitempty"`
-		Stk       decimal.NullDecimalV2 `json:"stk,omitempty"`
-		TickSz    decimal.NullDecimalV2 `json:"tickSz,omitempty"`
-		LotSz     decimal.NullDecimalV2 `json:"lotSz,omitempty"`
-		MinSz     decimal.NullDecimalV2 `json:"minSz,omitempty"`
+		CtVal     decimal.NullDecimalV2 `json:"ctVal"`
+		CtMult    decimal.NullDecimalV2 `json:"ctMult"`
+		Stk       decimal.NullDecimalV2 `json:"stk"`
+		TickSz    decimal.NullDecimalV2 `json:"tickSz"`
+		LotSz     decimal.NullDecimalV2 `json:"lotSz"`
+		MinSz     decimal.NullDecimalV2 `json:"minSz"`
 		Lever     decimal.NullDecimalV2 `json:"lever"`
+		MaxMktSz  decimal.NullDecimalV2 `json:"maxMktSz"`
 		InstType  okex.InstrumentType   `json:"instType"`
 		Category  okex.FeeCategory      `json:"category,string"`
 		OptType   okex.OptionType       `json:"optType,omitempty"`
