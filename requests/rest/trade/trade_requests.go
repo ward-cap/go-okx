@@ -12,8 +12,8 @@ type (
 		ClOrdID    string            `json:"clOrdId,omitempty"`
 		Tag        string            `json:"tag,omitempty"`
 		ReduceOnly bool              `json:"reduceOnly,omitempty"`
-		Sz         float64           `json:"sz,string"`
-		Px         float64           `json:"px,omitempty,string"`
+		Sz         string            `json:"sz"`
+		Px         string            `json:"px,omitempty"`
 		TdMode     okex.TradeMode    `json:"tdMode"`
 		Side       okex.OrderSide    `json:"side"`
 		PosSide    okex.PositionSide `json:"posSide,omitempty"`
