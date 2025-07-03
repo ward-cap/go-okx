@@ -2,8 +2,8 @@ package events
 
 import (
 	"encoding/json"
-	"github.com/shopspring/decimal"
 	"github.com/ward-cap/go-okx"
+	"github.com/ward-cap/go-okx/decimal"
 )
 
 type (
@@ -29,14 +29,14 @@ type (
 		Data []*Argument    `json:"data,omitempty"`
 	}
 	Error struct {
-		Event string              `json:"event,omitempty"`
-		Msg   string              `json:"msg,omitempty"`
-		Op    string              `json:"op,omitempty"`
-		Code  decimal.NullDecimal `json:"code"`
-		Args  []*Argument         `json:"args,omitempty"`
-		Arg   *Argument           `json:"arg,omitempty"`
-		Data  []*Argument         `json:"data,omitempty"`
-		ID    string              `json:"id,omitempty"`
+		Event string                `json:"event,omitempty"`
+		Msg   string                `json:"msg,omitempty"`
+		Op    string                `json:"op,omitempty"`
+		Code  decimal.NullDecimalV2 `json:"code"`
+		Args  []*Argument           `json:"args,omitempty"`
+		Arg   *Argument             `json:"arg,omitempty"`
+		Data  []*Argument           `json:"data,omitempty"`
+		ID    string                `json:"id,omitempty"`
 	}
 	Login struct {
 		Event string `json:"event"`

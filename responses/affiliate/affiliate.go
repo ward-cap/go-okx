@@ -1,24 +1,24 @@
 package affiliate
 
 import (
-	"github.com/shopspring/decimal"
 	okex "github.com/ward-cap/go-okx"
+	"github.com/ward-cap/go-okx/decimal"
 	"github.com/ward-cap/go-okx/responses"
 )
 
 type InviteeData struct {
-	AccFee            decimal.NullDecimal `json:"accFee"`
-	AffiliateCode     string              `json:"affiliateCode"`
-	DepAmt            decimal.NullDecimal `json:"depAmt"`
-	FirstTradeTime    okex.JSONTime       `json:"firstTradeTime"`
-	InviteeLevel      string              `json:"inviteeLevel"`
-	InviteeRebateRate decimal.NullDecimal `json:"inviteeRebateRate"`
-	JoinTime          okex.JSONTime       `json:"joinTime"`
-	KycTime           okex.JSONTime       `json:"kycTime"`
-	Level             string              `json:"level"`
-	Region            string              `json:"region"`
-	TotalCommission   decimal.NullDecimal `json:"totalCommission"`
-	VolMonth          decimal.NullDecimal `json:"volMonth"`
+	AccFee            decimal.NullDecimalV2 `json:"accFee"`
+	AffiliateCode     string                `json:"affiliateCode"`
+	DepAmt            decimal.NullDecimalV2 `json:"depAmt"`
+	FirstTradeTime    okex.JSONTime         `json:"firstTradeTime"`
+	InviteeLevel      string                `json:"inviteeLevel"`
+	InviteeRebateRate decimal.NullDecimalV2 `json:"inviteeRebateRate"`
+	JoinTime          okex.JSONTime         `json:"joinTime"`
+	KycTime           okex.JSONTime         `json:"kycTime"`
+	Level             string                `json:"level"`
+	Region            string                `json:"region"`
+	TotalCommission   decimal.NullDecimalV2 `json:"totalCommission"`
+	VolMonth          decimal.NullDecimalV2 `json:"volMonth"`
 }
 
 type InviteeResponse struct {

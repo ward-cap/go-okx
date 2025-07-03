@@ -5,6 +5,7 @@ import (
 	"github.com/ward-cap/go-okx"
 	"github.com/ward-cap/go-okx/api/rest"
 	"github.com/ward-cap/go-okx/api/ws"
+	"go.uber.org/zap"
 )
 
 // Client is the main api wrapper of okex
@@ -15,7 +16,12 @@ type Client struct {
 }
 
 // NewClient returns a pointer to a fresh Client
-func NewClient(ctx context.Context, apiKey, secretKey, passphrase string, destination okex.Destination) (*Client, error) {
+func NewClient(
+	ctx context.Context,
+	apiKey, secretKey, passphrase string,
+	destination okex.Destination,
+	logger *zap.SugaredLogger,
+) (*Client, error) {
 	restURL := okex.RestURL
 	wsPubURL := okex.PublicWsURL
 	wsPriURL := okex.PrivateWsURL
@@ -30,7 +36,7 @@ func NewClient(ctx context.Context, apiKey, secretKey, passphrase string, destin
 		wsPriURL = okex.DemoPrivateWsURL
 	}
 
-	r := rest.NewClient(apiKey, secretKey, passphrase, restURL, destination)
+	r := rest.NewClient(apiKey, secretKey, passphrase, restURL, destination, logger)
 	c := ws.NewClient(ctx, apiKey, secretKey, passphrase, map[bool]okex.BaseURL{true: wsPriURL, false: wsPubURL})
 
 	return &Client{r, c, ctx}, nil

@@ -1,8 +1,8 @@
 package public
 
 import (
-	"github.com/shopspring/decimal"
 	"github.com/ward-cap/go-okx"
+	"github.com/ward-cap/go-okx/decimal"
 )
 
 type (
@@ -60,11 +60,11 @@ type (
 		InstType okex.InstrumentType `json:"instType"`
 	}
 	GetPositionTiers struct {
-		InstID   string              `json:"instId,omitempty"`
-		Uly      string              `json:"uly,omitempty"`
-		InstType okex.InstrumentType `json:"instType"`
-		TdMode   okex.TradeMode      `json:"tdMode"`
-		Tier     decimal.NullDecimal `json:"tier,omitempty"`
+		InstID   string                `json:"instId,omitempty"`
+		Uly      string                `json:"uly,omitempty"`
+		InstType okex.InstrumentType   `json:"instType"`
+		TdMode   okex.TradeMode        `json:"tdMode"`
+		Tier     decimal.NullDecimalV2 `json:"tier,omitempty"`
 	}
 	GetUnderlying struct {
 		InstType okex.InstrumentType `json:"instType"`
