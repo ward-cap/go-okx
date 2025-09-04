@@ -79,11 +79,11 @@ func NewClient(ctx context.Context, apiKey, secretKey, passphrase string, url ma
 // Connect into the server
 //
 // https://www.okex.com/docs-v5/en/#websocket-api-connect
-func (c *ClientWs) Connect(p bool) error {
+func (c *ClientWs) Connect(ctx context.Context, p bool) error {
 	if c.conn[p] != nil {
 		return nil
 	}
-	err := c.dial(p)
+	err := c.dial(ctx, p)
 	if err == nil {
 		return nil
 	}
@@ -92,7 +92,7 @@ func (c *ClientWs) Connect(p bool) error {
 	for {
 		select {
 		case <-ticker.C:
-			err = c.dial(p)
+			err = c.dial(ctx, p)
 			if err == nil {
 				return nil
 			}
@@ -171,7 +171,7 @@ func (c *ClientWs) Unsubscribe(p bool, ch []okex.ChannelName, args map[string]st
 // Send message through either connections
 func (c *ClientWs) Send(p bool, op okex.Operation, args []map[string]string, extras ...map[string]string) error {
 	if op != okex.LoginOperation {
-		err := c.Connect(p)
+		err := c.Connect(context.TODO(), p)
 		if err == nil {
 			if p {
 				err = c.WaitForAuthorization()
@@ -238,9 +238,9 @@ func (c *ClientWs) WaitForAuthorization() error {
 	return nil
 }
 
-func (c *ClientWs) dial(p bool) error {
+func (c *ClientWs) dial(ctx context.Context, p bool) error {
 	c.mu[p].Lock()
-	conn, res, err := c.dialer.Dial(string(c.url[p]), nil)
+	conn, res, err := c.dialer.DialContext(ctx, string(c.url[p]), nil)
 	if err != nil {
 		var statusCode int
 		if res != nil {
