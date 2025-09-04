@@ -23,7 +23,7 @@ type ClientWs struct {
 	Cancel              context.CancelFunc
 	DoneChan            chan interface{}
 	StructuredEventChan chan interface{}
-	RawEventChan        chan *events.Basic
+	RawEventChan        chan []byte
 	ErrChan             chan *events.Error
 	SubscribeChan       chan *events.Subscribe
 	UnsubscribeCh       chan *events.Unsubscribe
@@ -215,7 +215,7 @@ func (c *ClientWs) SetDialer(dialer *websocket.Dialer) {
 	c.dialer = dialer
 }
 
-func (c *ClientWs) SetEventChannels(structuredEventCh chan interface{}, rawEventCh chan *events.Basic) {
+func (c *ClientWs) SetEventChannels(structuredEventCh chan interface{}, rawEventCh chan []byte) {
 	c.StructuredEventChan = structuredEventCh
 	c.RawEventChan = rawEventCh
 }
@@ -439,6 +439,6 @@ func (c *ClientWs) process(data []byte, e *events.Basic) bool {
 		}
 		return true
 	}
-	c.RawEventChan <- e
+	c.RawEventChan <- data
 	return false
 }
