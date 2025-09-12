@@ -2,6 +2,7 @@ package ws
 
 import (
 	"encoding/json"
+
 	"github.com/ward-cap/go-okx"
 	"github.com/ward-cap/go-okx/events"
 	"github.com/ward-cap/go-okx/events/private"

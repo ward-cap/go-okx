@@ -4,13 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"io"
+	"net/http"
+	"strings"
+
 	"github.com/ward-cap/go-okx"
 	requests "github.com/ward-cap/go-okx/requests/rest/funding"
 	responses2 "github.com/ward-cap/go-okx/responses"
 	responses "github.com/ward-cap/go-okx/responses/funding"
-	"io"
-	"net/http"
-	"strings"
 )
 
 // Funding

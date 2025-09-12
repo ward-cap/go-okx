@@ -2,10 +2,11 @@ package rest
 
 import (
 	"encoding/json"
+	"net/http"
+
 	"github.com/ward-cap/go-okx"
 	requests "github.com/ward-cap/go-okx/requests/rest/public"
 	responses "github.com/ward-cap/go-okx/responses/public_data"
-	"net/http"
 )
 
 // PublicData

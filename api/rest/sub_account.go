@@ -2,11 +2,12 @@ package rest
 
 import (
 	"encoding/json"
+	"net/http"
+	"strings"
+
 	"github.com/ward-cap/go-okx"
 	requests "github.com/ward-cap/go-okx/requests/rest/subaccount"
 	responses "github.com/ward-cap/go-okx/responses/sub_account"
-	"net/http"
-	"strings"
 )
 
 // SubAccount

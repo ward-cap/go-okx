@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+
 	"github.com/ward-cap/go-okx"
 	"github.com/ward-cap/go-okx/api/rest"
 	"github.com/ward-cap/go-okx/api/ws"

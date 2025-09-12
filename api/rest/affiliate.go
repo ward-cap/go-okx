@@ -5,10 +5,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/ward-cap/go-okx/responses"
-	"github.com/ward-cap/go-okx/responses/affiliate"
 	"io"
 	"net/http"
+
+	"github.com/ward-cap/go-okx/responses"
+	"github.com/ward-cap/go-okx/responses/affiliate"
 )
 
 type Affiliate struct {

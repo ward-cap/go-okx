@@ -8,13 +8,14 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"net/http"
+	"strings"
+	"time"
+
 	"github.com/ward-cap/go-okx"
 	requests "github.com/ward-cap/go-okx/requests/rest/public"
 	responses "github.com/ward-cap/go-okx/responses/public_data"
 	"go.uber.org/zap"
-	"net/http"
-	"strings"
-	"time"
 )
 
 // ClientRest is the rest api client

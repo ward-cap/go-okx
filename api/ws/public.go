@@ -3,11 +3,12 @@ package ws
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
+
 	"github.com/ward-cap/go-okx"
 	"github.com/ward-cap/go-okx/events"
 	"github.com/ward-cap/go-okx/events/public"
 	requests "github.com/ward-cap/go-okx/requests/ws/public"
-	"strings"
 )
 
 // Public

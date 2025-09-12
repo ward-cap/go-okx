@@ -3,10 +3,11 @@ package market
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/ward-cap/go-okx"
-	"github.com/ward-cap/go-okx/decimal"
 	"strconv"
 	"time"
+
+	"github.com/ward-cap/go-okx"
+	"github.com/ward-cap/go-okx/decimal"
 )
 
 type (

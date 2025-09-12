@@ -3,9 +3,10 @@ package tradedata
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/ward-cap/go-okx"
 	"strconv"
 	"time"
+
+	"github.com/ward-cap/go-okx"
 )
 
 type (

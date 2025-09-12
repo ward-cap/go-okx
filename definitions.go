@@ -298,34 +298,27 @@ const (
 	CandleStick1m  = CandleStickWsBarSize("candle1m")
 )
 
-func (t JSONTime) GobEncode() ([]byte, error) {
-	return time.Time(t).MarshalBinary()
-}
+func (t *JSONTime) String() string { return (time.Time)(*t).String() }
 
-func (t *JSONTime) GobDecode(data []byte) error {
+func (t *JSONTime) UnmarshalJSON(s []byte) error {
+	if q, err := strconv.ParseInt(unquoteIfQuoted(s), 10, 64); err == nil {
+		*(*time.Time)(t) = time.UnixMilli(q)
+		return nil
+	}
+
 	t2 := time.Time{}
-	err := t2.UnmarshalBinary(data)
-	if err != nil {
+	if err := t2.UnmarshalJSON(s); err != nil {
 		return err
 	}
-	*t = JSONTime(t2)
+	*(*time.Time)(t) = t2
 	return nil
 }
 
-func (t *JSONTime) String() string { return (time.Time)(*t).String() }
-
-func (t *JSONTime) UnmarshalJSON(s []byte) (err error) {
-	r := strings.ReplaceAll(string(s), `"`, ``)
-	if r == "" {
-		return
+func unquoteIfQuoted(bytes []byte) string {
+	if len(bytes) > 2 && bytes[0] == '"' && bytes[len(bytes)-1] == '"' {
+		bytes = bytes[1 : len(bytes)-1]
 	}
-
-	q, err := strconv.ParseInt(r, 10, 64)
-	if err != nil {
-		return err
-	}
-	*(*time.Time)(t) = time.UnixMilli(q)
-	return
+	return string(bytes)
 }
 
 func (t *JSONTime) MarshalJSON() ([]byte, error) {

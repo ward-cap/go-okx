@@ -3,12 +3,13 @@ package rest
 import (
 	"context"
 	"encoding/json"
-	"github.com/ward-cap/go-okx"
-	requests "github.com/ward-cap/go-okx/requests/rest/account"
-	responses "github.com/ward-cap/go-okx/responses/account"
 	"io"
 	"net/http"
 	"strings"
+
+	"github.com/ward-cap/go-okx"
+	requests "github.com/ward-cap/go-okx/requests/rest/account"
+	responses "github.com/ward-cap/go-okx/responses/account"
 )
 
 // Account

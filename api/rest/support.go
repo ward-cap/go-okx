@@ -3,8 +3,9 @@ package rest
 import (
 	"context"
 	"encoding/json"
-	"github.com/ward-cap/go-okx/responses/support"
 	"net/http"
+
+	"github.com/ward-cap/go-okx/responses/support"
 )
 
 type Support struct {

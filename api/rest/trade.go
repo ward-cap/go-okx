@@ -2,11 +2,12 @@ package rest
 
 import (
 	"encoding/json"
+	"io"
+	"net/http"
+
 	"github.com/ward-cap/go-okx"
 	requests "github.com/ward-cap/go-okx/requests/rest/trade"
 	responses "github.com/ward-cap/go-okx/responses/trade"
-	"io"
-	"net/http"
 )
 
 // Trade

@@ -2,6 +2,7 @@ package events
 
 import (
 	"encoding/json"
+
 	"github.com/ward-cap/go-okx"
 	"github.com/ward-cap/go-okx/decimal"
 )
