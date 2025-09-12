@@ -298,6 +298,20 @@ const (
 	CandleStick1m  = CandleStickWsBarSize("candle1m")
 )
 
+func (t JSONTime) GobEncode() ([]byte, error) {
+	return time.Time(t).MarshalBinary()
+}
+
+func (t *JSONTime) GobDecode(data []byte) error {
+	t2 := time.Time{}
+	err := t2.UnmarshalBinary(data)
+	if err != nil {
+		return err
+	}
+	*t = JSONTime(t2)
+	return nil
+}
+
 func (t *JSONTime) String() string { return (time.Time)(*t).String() }
 
 func (t *JSONTime) UnmarshalJSON(s []byte) (err error) {
