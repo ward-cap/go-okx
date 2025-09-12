@@ -7,13 +7,14 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"github.com/gorilla/websocket"
-	"github.com/ward-cap/go-okx"
-	"github.com/ward-cap/go-okx/events"
 	"io"
 	"net/http"
 	"sync"
 	"time"
+
+	"github.com/gorilla/websocket"
+	"github.com/ward-cap/go-okx"
+	"github.com/ward-cap/go-okx/events"
 )
 
 // ClientWs is the websocket api client
@@ -439,6 +440,9 @@ func (c *ClientWs) process(data []byte, e *events.Basic) bool {
 		}
 		return true
 	}
-	c.RawEventChan <- data
+	if c.RawEventChan != nil {
+		c.RawEventChan <- data
+	}
+
 	return false
 }
