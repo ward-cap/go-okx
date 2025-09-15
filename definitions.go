@@ -301,8 +301,12 @@ const (
 func (t *JSONTime) String() string { return (time.Time)(*t).String() }
 
 func (t *JSONTime) UnmarshalJSON(s []byte) error {
-	if q, err := strconv.ParseInt(unquoteIfQuoted(s), 10, 64); err == nil {
+	unq := unquoteIfQuoted(s)
+	if q, err := strconv.ParseInt(unq, 10, 64); err == nil {
 		*(*time.Time)(t) = time.UnixMilli(q)
+		return nil
+	}
+	if unq == "" {
 		return nil
 	}
 
