@@ -308,7 +308,6 @@ func (c *ClientWs) sender(p bool) error {
 			c.mu[p].RUnlock()
 			if conn != nil && (lastTransmit == nil || (lastTransmit != nil && time.Since(*lastTransmit) > PingPeriod)) {
 				go func() {
-
 					c.sendChan[p] <- []byte("ping")
 				}()
 			}
@@ -334,6 +333,10 @@ func (c *ClientWs) receiver(p bool) error {
 			if err != nil {
 				c.mu[p].RUnlock()
 				if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
+					if e := c.ErrChan; e != nil {
+						e <- &events.Error{Event: "connection closed due read timeout"}
+					}
+					c.Cancel()
 					return c.conn[p].Close()
 				}
 				return err
@@ -355,9 +358,7 @@ func (c *ClientWs) receiver(p bool) error {
 					go func() { c.sendChan[p] <- []byte("pong") }()
 					continue
 				}
-			}
 
-			if mt == websocket.TextMessage {
 				e := &events.Basic{}
 				if err := json.Unmarshal(data, &e); err != nil {
 					// Not a structured event; forward raw and continue instead of dropping the connection.
