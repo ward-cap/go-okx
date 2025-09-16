@@ -172,7 +172,7 @@ func (c *ClientWs) Unsubscribe(p bool, ch []okex.ChannelName, args map[string]st
 // Send message through either connections
 func (c *ClientWs) Send(p bool, op okex.Operation, args []map[string]string, extras ...map[string]string) error {
 	if op != okex.LoginOperation {
-		err := c.Connect(context.TODO(), p)
+		err := c.Connect(c.ctx, p)
 		if err == nil {
 			if p {
 				err = c.WaitForAuthorization()
@@ -308,6 +308,7 @@ func (c *ClientWs) sender(p bool) error {
 			c.mu[p].RUnlock()
 			if conn != nil && (lastTransmit == nil || (lastTransmit != nil && time.Since(*lastTransmit) > PingPeriod)) {
 				go func() {
+
 					c.sendChan[p] <- []byte("ping")
 				}()
 			}
@@ -342,10 +343,28 @@ func (c *ClientWs) receiver(p bool) error {
 			c.mu[p].Lock()
 			c.lastTransmit[p] = &now
 			c.mu[p].Unlock()
-			if mt == websocket.TextMessage && string(data) != "pong" {
+
+			// Handle heartbeat text frames explicitly.
+			if mt == websocket.TextMessage {
+				switch string(data) {
+				case "pong":
+					// Received heartbeat response from server; nothing else to do.
+					continue
+				case "ping":
+					// Server is pinging us using a text message: respond with "pong" via the sender.
+					go func() { c.sendChan[p] <- []byte("pong") }()
+					continue
+				}
+			}
+
+			if mt == websocket.TextMessage {
 				e := &events.Basic{}
 				if err := json.Unmarshal(data, &e); err != nil {
-					return err
+					// Not a structured event; forward raw and continue instead of dropping the connection.
+					if c.RawEventChan != nil {
+						c.RawEventChan <- data
+					}
+					continue
 				}
 				go func() {
 					c.process(data, e)
