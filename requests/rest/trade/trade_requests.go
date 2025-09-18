@@ -11,7 +11,7 @@ type (
 		Ccy        string            `json:"ccy,omitempty"`
 		ClOrdID    string            `json:"clOrdId,omitempty"`
 		Tag        string            `json:"tag,omitempty"`
-		ReduceOnly bool              `json:"reduceOnly,omitempty"`
+		ReduceOnly bool              `json:"reduceOnly,omitempty,string"`
 		Sz         string            `json:"sz"`
 		Px         string            `json:"px,omitempty"`
 		TdMode     okex.TradeMode    `json:"tdMode"`
