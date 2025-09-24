@@ -75,6 +75,7 @@ type (
 		FillPx   decimal.NullDecimalV2 `json:"fillPx"`
 		FillSz   decimal.NullDecimalV2 `json:"fillSz"`
 		FeeCcy   string                `json:"feeCcy"`
+		FillTime int64                 `json:"fillTime,string"`
 		Fee      decimal.NullDecimalV2 `json:"fee"`
 		InstType okex.InstrumentType   `json:"instType"`
 		Side     okex.OrderSide        `json:"side"`
