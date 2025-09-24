@@ -58,11 +58,11 @@ type (
 		State    okex.OrderState     `json:"state,omitempty"`
 	}
 	TransactionDetails struct {
-		AfterBillID  string `json:"after,omitempty"`
-		BeforeBillID string `json:"before,omitempty"`
+		AfterBillID  *string `json:"after,omitempty"`
+		BeforeBillID *string `json:"before,omitempty"`
 
-		BeginUnixTime int64 `json:"begin,omitempty"`
-		EndUnixTime   int64 `json:"end,omitempty"`
+		BeginUnixTime *int64 `json:"begin,omitempty"`
+		EndUnixTime   *int64 `json:"end,omitempty"`
 
 		InstID string `json:"instId,omitempty"`
 		OrdID  string `json:"ordId,omitempty"`
