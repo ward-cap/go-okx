@@ -74,7 +74,7 @@ type (
 		Tag      decimal.NullDecimalV2 `json:"tag"`
 		FillPx   decimal.NullDecimalV2 `json:"fillPx"`
 		FillSz   decimal.NullDecimalV2 `json:"fillSz"`
-		FeeCcy   decimal.NullDecimalV2 `json:"feeCcy"`
+		FeeCcy   string                `json:"feeCcy"`
 		Fee      decimal.NullDecimalV2 `json:"fee"`
 		InstType okex.InstrumentType   `json:"instType"`
 		Side     okex.OrderSide        `json:"side"`
