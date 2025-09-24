@@ -67,7 +67,7 @@ type (
 		InstID string `json:"instId,omitempty"`
 		OrdID  string `json:"ordId,omitempty"`
 
-		Limit    float64             `json:"limit,omitempty,string"`
+		Limit    int64               `json:"limit,omitempty,string"`
 		InstType okex.InstrumentType `json:"instType,omitempty"`
 	}
 	PlaceAlgoOrder struct {
