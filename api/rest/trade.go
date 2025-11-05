@@ -216,7 +216,7 @@ func (c *Trade) GetOrderHistory(req requests.OrderList, arch bool) (response res
 func (c *Trade) GetTransactionDetails(req requests.TransactionDetails, arch bool) (response responses.TransactionDetail, err error) {
 	p := "/api/v5/trade/fills"
 	if arch {
-		p = "/api/trade/fills-history"
+		p = "/api/v5/trade/fills-history"
 	}
 	m := okex.S2M(req)
 	res, err := c.client.Do(http.MethodGet, p, true, m)
