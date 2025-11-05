@@ -61,8 +61,8 @@ type (
 		AfterBillID  *string `json:"after,omitempty"`
 		BeforeBillID *string `json:"before,omitempty"`
 
-		BeginUnixTime *int64 `json:"begin,omitempty"`
-		EndUnixTime   *int64 `json:"end,omitempty"`
+		BeginUnixTime *int64 `json:"begin,omitempty,string"`
+		EndUnixTime   *int64 `json:"end,omitempty,string"`
 
 		InstID string `json:"instId,omitempty"`
 		OrdID  string `json:"ordId,omitempty"`
