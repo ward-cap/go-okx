@@ -71,7 +71,7 @@ type (
 		TradeID  string                `json:"tradeId"`
 		ClOrdID  string                `json:"clOrdId"`
 		BillID   string                `json:"billId"`
-		Tag      decimal.NullDecimalV2 `json:"tag"`
+		Tag      string                `json:"tag"`
 		FillPx   decimal.NullDecimalV2 `json:"fillPx"`
 		FillSz   decimal.NullDecimalV2 `json:"fillSz"`
 		FeeCcy   string                `json:"feeCcy"`
