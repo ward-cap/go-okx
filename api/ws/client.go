@@ -7,12 +7,11 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"sync"
 	"time"
 
-	"github.com/gorilla/websocket"
+	"github.com/coder/websocket"
 	"github.com/ward-cap/go-okx"
 	"github.com/ward-cap/go-okx/events"
 )
@@ -33,11 +32,10 @@ type ClientWs struct {
 	sendChan            map[bool]chan []byte
 	url                 map[bool]okex.BaseURL
 	conn                map[bool]*websocket.Conn
-	dialer              *websocket.Dialer
 	apiKey              string
 	secretKey           []byte
 	passphrase          string
-	lastTransmit        map[bool]*time.Time
+	lastRecv            map[bool]time.Time
 	mu                  map[bool]*sync.RWMutex
 	AuthRequested       *time.Time
 	Authorized          bool
@@ -58,18 +56,17 @@ const (
 func NewClient(ctx context.Context, apiKey, secretKey, passphrase string, url map[bool]okex.BaseURL) *ClientWs {
 	ctx, cancel := context.WithCancel(ctx)
 	c := &ClientWs{
-		apiKey:       apiKey,
-		secretKey:    []byte(secretKey),
-		passphrase:   passphrase,
-		ctx:          ctx,
-		Cancel:       cancel,
-		url:          url,
-		sendChan:     map[bool]chan []byte{true: make(chan []byte, 3), false: make(chan []byte, 3)},
-		DoneChan:     make(chan interface{}),
-		conn:         make(map[bool]*websocket.Conn),
-		dialer:       websocket.DefaultDialer,
-		lastTransmit: make(map[bool]*time.Time),
-		mu:           map[bool]*sync.RWMutex{true: {}, false: {}},
+		apiKey:     apiKey,
+		secretKey:  []byte(secretKey),
+		passphrase: passphrase,
+		ctx:        ctx,
+		Cancel:     cancel,
+		url:        url,
+		sendChan:   map[bool]chan []byte{true: make(chan []byte, 3), false: make(chan []byte, 3)},
+		DoneChan:   make(chan interface{}),
+		conn:       make(map[bool]*websocket.Conn),
+		lastRecv:   make(map[bool]time.Time),
+		mu:         map[bool]*sync.RWMutex{true: {}, false: {}},
 	}
 	c.Private = NewPrivate(c)
 	c.Public = NewPublic(c)
@@ -211,11 +208,7 @@ func (c *ClientWs) SetChannels(errCh chan *events.Error, subCh chan *events.Subs
 	c.SuccessChan = sCh
 }
 
-// SetDialer sets a custom dialer for the WebSocket connection.
-func (c *ClientWs) SetDialer(dialer *websocket.Dialer) {
-	c.dialer = dialer
-}
-
+// SetEventChannels sets channels for structured and raw events.
 func (c *ClientWs) SetEventChannels(structuredEventCh chan interface{}, rawEventCh chan []byte) {
 	c.StructuredEventChan = structuredEventCh
 	c.RawEventChan = rawEventCh
@@ -239,9 +232,9 @@ func (c *ClientWs) WaitForAuthorization() error {
 	return nil
 }
 
+// dial establishes a websocket connection using github.com/coder/websocket.
 func (c *ClientWs) dial(ctx context.Context, p bool) error {
-	c.mu[p].Lock()
-	conn, res, err := c.dialer.DialContext(ctx, string(c.url[p]), nil)
+	conn, res, err := websocket.Dial(ctx, string(c.url[p]), nil)
 	if err != nil {
 		var statusCode int
 		if res != nil {
@@ -249,128 +242,144 @@ func (c *ClientWs) dial(ctx context.Context, p bool) error {
 		}
 		return fmt.Errorf("error %d: %w", statusCode, err)
 	}
+	if res != nil && res.Body != nil {
+		defer res.Body.Close()
+	}
+
+	now := time.Now()
+
+	c.mu[p].Lock()
 	c.conn[p] = conn
+	c.lastRecv[p] = now
 	c.mu[p].Unlock()
 
-	defer func(Body io.ReadCloser) {
-		err := Body.Close()
-		if err != nil {
-			fmt.Printf("error closing body: %v\n", err)
-		}
-	}(res.Body)
 	go func() {
-		err := c.receiver(p)
-		if err != nil {
+		if err := c.receiver(p); err != nil {
 			fmt.Printf("receiver error: %v\n", err)
 		}
 	}()
 	go func() {
-		err := c.sender(p)
-		if err != nil {
+		if err := c.sender(p); err != nil {
 			fmt.Printf("sender error: %v\n", err)
 		}
 	}()
+	go c.heartbeat(p)
 
 	return nil
 }
 
+// sender writes messages from sendChan[p] to the websocket connection.
 func (c *ClientWs) sender(p bool) error {
-	ticker := time.NewTicker(time.Millisecond * 300)
-	defer ticker.Stop()
 	for {
 		select {
 		case data := <-c.sendChan[p]:
 			c.mu[p].RLock()
-			err := c.conn[p].SetWriteDeadline(time.Now().Add(writeWait))
-			if err != nil {
-				c.mu[p].RUnlock()
-				return err
-			}
-			w, err := c.conn[p].NextWriter(websocket.TextMessage)
-			if err != nil {
-				c.mu[p].RUnlock()
-				return err
-			}
-			if _, err = w.Write(data); err != nil {
-				c.mu[p].RUnlock()
-				return err
-			}
-			now := time.Now()
-			c.lastTransmit[p] = &now
-			c.mu[p].RUnlock()
-			if err := w.Close(); err != nil {
-				return err
-			}
-		case <-ticker.C:
-			c.mu[p].RLock()
 			conn := c.conn[p]
-			lastTransmit := c.lastTransmit[p]
 			c.mu[p].RUnlock()
-			if conn != nil && (lastTransmit == nil || (lastTransmit != nil && time.Since(*lastTransmit) > PingPeriod)) {
-				go func() {
-					c.sendChan[p] <- []byte("ping")
-				}()
+			if conn == nil {
+				return fmt.Errorf("no connection")
 			}
+
+			ctx, cancel := context.WithTimeout(c.ctx, writeWait)
+			err := conn.Write(ctx, websocket.MessageText, data)
+			cancel()
+			if err != nil {
+				return err
+			}
+
 		case <-c.ctx.Done():
 			return c.handleCancel("sender")
 		}
 	}
 }
 
-func (c *ClientWs) receiver(p bool) error {
+// heartbeat sends OKX-style "ping" text messages when there has been
+// no inbound traffic for PingPeriod.
+func (c *ClientWs) heartbeat(p bool) {
+	ticker := time.NewTicker(PingPeriod)
+	defer ticker.Stop()
+
 	for {
 		select {
+		case <-ticker.C:
+			c.mu[p].RLock()
+			conn := c.conn[p]
+			last := c.lastRecv[p]
+			c.mu[p].RUnlock()
+
+			if conn == nil {
+				return
+			}
+
+			if time.Since(last) >= PingPeriod {
+				select {
+				case c.sendChan[p] <- []byte("ping"):
+				default:
+					// черга забита – просто пропускаємо цей пінг
+				}
+			}
+
 		case <-c.ctx.Done():
+			return
+		}
+	}
+}
+
+// receiver reads messages from the websocket connection and dispatches them.
+func (c *ClientWs) receiver(p bool) error {
+	c.mu[p].RLock()
+	conn := c.conn[p]
+	c.mu[p].RUnlock()
+	if conn == nil {
+		return fmt.Errorf("no connection")
+	}
+
+	// CloseRead дозволяє безпечно писати одночасно.
+	ctx := conn.CloseRead(c.ctx)
+
+	for {
+		select {
+		case <-ctx.Done():
 			return c.handleCancel("receiver")
 		default:
-			c.mu[p].RLock()
-			err := c.conn[p].SetReadDeadline(time.Now().Add(pongWait))
+			mt, data, err := conn.Read(ctx)
 			if err != nil {
-				c.mu[p].RUnlock()
-				return err
-			}
-			mt, data, err := c.conn[p].ReadMessage()
-			if err != nil {
-				c.mu[p].RUnlock()
-				if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-					if e := c.ErrChan; e != nil {
-						e <- &events.Error{Event: "connection closed due read timeout"}
-					}
-					c.Cancel()
-					return c.conn[p].Close()
+				if c.ErrChan != nil {
+					c.ErrChan <- &events.Error{Event: fmt.Sprintf("connection closed: %v", err)}
 				}
+				c.Cancel()
 				return err
 			}
-			c.mu[p].RUnlock()
+
 			now := time.Now()
 			c.mu[p].Lock()
-			c.lastTransmit[p] = &now
+			c.lastRecv[p] = now
 			c.mu[p].Unlock()
 
-			// Handle heartbeat text frames explicitly.
-			if mt == websocket.TextMessage {
+			if mt == websocket.MessageText {
 				switch string(data) {
 				case "pong":
-					// Received heartbeat response from server; nothing else to do.
+					// Received heartbeat response from the server; nothing else to do.
 					continue
 				case "ping":
 					// Server is pinging us using a text message: respond with "pong" via the sender.
 					go func() { c.sendChan[p] <- []byte("pong") }()
 					continue
 				}
-
-				e := &events.Basic{}
-				if err := json.Unmarshal(data, &e); err != nil {
-					// Not a structured event; forward raw and continue instead of dropping the connection.
-					if c.RawEventChan != nil {
-						c.RawEventChan <- data
-					}
-					continue
-				}
-				go func() {
-					c.process(data, e)
-				}()
 			}
+
+			e := &events.Basic{}
+			if err := json.Unmarshal(data, e); err != nil {
+				// Не структурована подія – шлемо в RawEventChan, якщо є.
+				if c.RawEventChan != nil {
+					c.RawEventChan <- data
+				}
+				continue
+			}
+
+			go func() {
+				c.process(data, e)
+			}()
 		}
 	}
 }
@@ -395,30 +404,30 @@ func (c *ClientWs) handleCancel(msg string) error {
 func (c *ClientWs) process(data []byte, e *events.Basic) bool {
 	switch e.Event {
 	case "error":
-		e := events.Error{}
-		_ = json.Unmarshal(data, &e)
+		e2 := events.Error{}
+		_ = json.Unmarshal(data, &e2)
 		if c.ErrChan != nil {
-			c.ErrChan <- &e
+			c.ErrChan <- &e2
 		}
 		return true
 	case "subscribe":
-		e := events.Subscribe{}
-		_ = json.Unmarshal(data, &e)
+		e2 := events.Subscribe{}
+		_ = json.Unmarshal(data, &e2)
 		if c.SubscribeChan != nil {
-			c.SubscribeChan <- &e
+			c.SubscribeChan <- &e2
 		}
 		if c.StructuredEventChan != nil {
-			c.StructuredEventChan <- e
+			c.StructuredEventChan <- e2
 		}
 		return true
 	case "unsubscribe":
-		e := events.Unsubscribe{}
-		_ = json.Unmarshal(data, &e)
+		e2 := events.Unsubscribe{}
+		_ = json.Unmarshal(data, &e2)
 		if c.UnsubscribeCh != nil {
-			c.UnsubscribeCh <- &e
+			c.UnsubscribeCh <- &e2
 		}
 		if c.StructuredEventChan != nil {
-			c.StructuredEventChan <- e
+			c.StructuredEventChan <- e2
 		}
 		return true
 	case "login":
@@ -428,16 +437,17 @@ func (c *ClientWs) process(data []byte, e *events.Basic) bool {
 			break
 		}
 		c.Authorized = true
-		e := events.Login{}
-		_ = json.Unmarshal(data, &e)
+		e2 := events.Login{}
+		_ = json.Unmarshal(data, &e2)
 		if c.LoginChan != nil {
-			c.LoginChan <- &e
+			c.LoginChan <- &e2
 		}
 		if c.StructuredEventChan != nil {
-			c.StructuredEventChan <- e
+			c.StructuredEventChan <- e2
 		}
 		return true
 	}
+
 	if c.Private.Process(data, e) {
 		return true
 	}
@@ -450,13 +460,13 @@ func (c *ClientWs) process(data []byte, e *events.Basic) bool {
 			ee.Event = "error"
 			return c.process(data, &ee)
 		}
-		e := events.Success{}
-		_ = json.Unmarshal(data, &e)
+		e2 := events.Success{}
+		_ = json.Unmarshal(data, &e2)
 		if c.SuccessChan != nil {
-			c.SuccessChan <- &e
+			c.SuccessChan <- &e2
 		}
 		if c.StructuredEventChan != nil {
-			c.StructuredEventChan <- e
+			c.StructuredEventChan <- e2
 		}
 		return true
 	}
