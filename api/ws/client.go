@@ -15,6 +15,7 @@ import (
 	"github.com/coder/websocket"
 	"github.com/ward-cap/go-okx"
 	"github.com/ward-cap/go-okx/events"
+	"go.uber.org/zap"
 )
 
 // ClientWs is the websocket api client
@@ -44,6 +45,7 @@ type ClientWs struct {
 	Public              *Public
 	Trade               *Trade
 	ctx                 context.Context
+	logger              *zap.SugaredLogger
 }
 
 const (
@@ -54,9 +56,15 @@ const (
 )
 
 // NewClient returns a pointer to a fresh ClientWs
-func NewClient(ctx context.Context, apiKey, secretKey, passphrase string, url map[bool]okex.BaseURL) *ClientWs {
+func NewClient(
+	ctx context.Context,
+	apiKey, secretKey, passphrase string,
+	url map[bool]okex.BaseURL,
+	logger *zap.SugaredLogger,
+) *ClientWs {
 	ctx, cancel := context.WithCancel(ctx)
 	c := &ClientWs{
+		logger:       logger,
 		apiKey:       apiKey,
 		secretKey:    []byte(secretKey),
 		passphrase:   passphrase,
@@ -279,6 +287,9 @@ func (c *ClientWs) sender(p bool) error {
 					// Using select to prevent blocking if sendChan is full
 					select {
 					case c.sendChan[p] <- []byte("ping"):
+						if c.logger != nil {
+							c.logger.Info("send ping")
+						}
 					default:
 					}
 				}()
@@ -342,11 +353,18 @@ func (c *ClientWs) receiver(p bool) error {
 			if mt == websocket.MessageText {
 				switch string(data) {
 				case "pong":
-					// Received heartbeat response from server; nothing else to do.
+					if c.logger != nil {
+						c.logger.Info("got pong")
+					}
 					continue
+
 				case "ping":
-					// Server is pinging us using a text message: respond with "pong" via the sender.
-					go func() { c.sendChan[p] <- []byte("pong") }()
+					if c.logger != nil {
+						c.logger.Info("got ping")
+					}
+					go func() {
+						c.sendChan[p] <- []byte("pong")
+					}()
 					continue
 				}
 
