@@ -7,12 +7,11 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"sync"
 	"time"
 
-	"github.com/gorilla/websocket"
+	"github.com/coder/websocket"
 	"github.com/ward-cap/go-okx"
 	"github.com/ward-cap/go-okx/events"
 )
@@ -33,7 +32,6 @@ type ClientWs struct {
 	sendChan            map[bool]chan []byte
 	url                 map[bool]okex.BaseURL
 	conn                map[bool]*websocket.Conn
-	dialer              *websocket.Dialer
 	apiKey              string
 	secretKey           []byte
 	passphrase          string
@@ -51,7 +49,7 @@ const (
 	redialTick = 2 * time.Second
 	writeWait  = 3 * time.Second
 	pongWait   = 30 * time.Second
-	PingPeriod = (pongWait * 8) / 10
+	PingPeriod = pongWait * 8 / 10
 )
 
 // NewClient returns a pointer to a fresh ClientWs
@@ -67,7 +65,6 @@ func NewClient(ctx context.Context, apiKey, secretKey, passphrase string, url ma
 		sendChan:     map[bool]chan []byte{true: make(chan []byte, 3), false: make(chan []byte, 3)},
 		DoneChan:     make(chan interface{}),
 		conn:         make(map[bool]*websocket.Conn),
-		dialer:       websocket.DefaultDialer,
 		lastTransmit: make(map[bool]*time.Time),
 		mu:           map[bool]*sync.RWMutex{true: {}, false: {}},
 	}
@@ -202,25 +199,6 @@ func (c *ClientWs) Send(p bool, op okex.Operation, args []map[string]string, ext
 	return nil
 }
 
-// SetChannels to receive certain events on separate channel
-func (c *ClientWs) SetChannels(errCh chan *events.Error, subCh chan *events.Subscribe, unSub chan *events.Unsubscribe, lCh chan *events.Login, sCh chan *events.Success) {
-	c.ErrChan = errCh
-	c.SubscribeChan = subCh
-	c.UnsubscribeCh = unSub
-	c.LoginChan = lCh
-	c.SuccessChan = sCh
-}
-
-// SetDialer sets a custom dialer for the WebSocket connection.
-func (c *ClientWs) SetDialer(dialer *websocket.Dialer) {
-	c.dialer = dialer
-}
-
-func (c *ClientWs) SetEventChannels(structuredEventCh chan interface{}, rawEventCh chan []byte) {
-	c.StructuredEventChan = structuredEventCh
-	c.RawEventChan = rawEventCh
-}
-
 // WaitForAuthorization waits for the auth response and try to log in if it was needed
 func (c *ClientWs) WaitForAuthorization() error {
 	if c.Authorized {
@@ -241,23 +219,15 @@ func (c *ClientWs) WaitForAuthorization() error {
 
 func (c *ClientWs) dial(ctx context.Context, p bool) error {
 	c.mu[p].Lock()
-	conn, res, err := c.dialer.DialContext(ctx, string(c.url[p]), nil)
+	conn, _, err := websocket.Dial(ctx, string(c.url[p]), nil)
 	if err != nil {
-		var statusCode int
-		if res != nil {
-			statusCode = res.StatusCode
-		}
-		return fmt.Errorf("error %d: %w", statusCode, err)
+		c.mu[p].Unlock()
+		return fmt.Errorf("dial error: %w", err)
 	}
+	conn.SetReadLimit(32768 * 10) // Increase read limit for large order books if necessary
 	c.conn[p] = conn
 	c.mu[p].Unlock()
 
-	defer func(Body io.ReadCloser) {
-		err := Body.Close()
-		if err != nil {
-			fmt.Printf("error closing body: %v\n", err)
-		}
-	}(res.Body)
 	go func() {
 		err := c.receiver(p)
 		if err != nil {
@@ -281,26 +251,23 @@ func (c *ClientWs) sender(p bool) error {
 		select {
 		case data := <-c.sendChan[p]:
 			c.mu[p].RLock()
-			err := c.conn[p].SetWriteDeadline(time.Now().Add(writeWait))
-			if err != nil {
+			conn := c.conn[p]
+			if conn == nil {
 				c.mu[p].RUnlock()
-				return err
+				return fmt.Errorf("connection is nil")
 			}
-			w, err := c.conn[p].NextWriter(websocket.TextMessage)
+
+			writeCtx, cancel := context.WithTimeout(c.ctx, writeWait)
+			err := conn.Write(writeCtx, websocket.MessageText, data)
+			cancel()
+
 			if err != nil {
-				c.mu[p].RUnlock()
-				return err
-			}
-			if _, err = w.Write(data); err != nil {
 				c.mu[p].RUnlock()
 				return err
 			}
 			now := time.Now()
 			c.lastTransmit[p] = &now
 			c.mu[p].RUnlock()
-			if err := w.Close(); err != nil {
-				return err
-			}
 		case <-ticker.C:
 			c.mu[p].RLock()
 			conn := c.conn[p]
@@ -308,7 +275,11 @@ func (c *ClientWs) sender(p bool) error {
 			c.mu[p].RUnlock()
 			if conn != nil && (lastTransmit == nil || (lastTransmit != nil && time.Since(*lastTransmit) > PingPeriod)) {
 				go func() {
-					c.sendChan[p] <- []byte("ping")
+					// Using select to prevent blocking if sendChan is full
+					select {
+					case c.sendChan[p] <- []byte("ping"):
+					default:
+					}
 				}()
 			}
 		case <-c.ctx.Done():
@@ -318,37 +289,56 @@ func (c *ClientWs) sender(p bool) error {
 }
 
 func (c *ClientWs) receiver(p bool) error {
+	defer func() {
+		c.mu[p].Lock()
+		if c.conn[p] != nil {
+			// Close with normal status, error handling is done by caller/logger
+			_ = c.conn[p].Close(websocket.StatusNormalClosure, "receiver closing")
+			c.conn[p] = nil
+		}
+		c.mu[p].Unlock()
+	}()
+
 	for {
 		select {
 		case <-c.ctx.Done():
 			return c.handleCancel("receiver")
 		default:
 			c.mu[p].RLock()
-			err := c.conn[p].SetReadDeadline(time.Now().Add(pongWait))
-			if err != nil {
-				c.mu[p].RUnlock()
-				return err
+			conn := c.conn[p]
+			c.mu[p].RUnlock()
+			if conn == nil {
+				return fmt.Errorf("connection is nil")
 			}
-			mt, data, err := c.conn[p].ReadMessage()
+
+			// Emulate SetReadDeadline using context timeout
+			readCtx, cancel := context.WithTimeout(c.ctx, pongWait)
+			mt, data, err := conn.Read(readCtx)
+			cancel()
+
 			if err != nil {
-				c.mu[p].RUnlock()
-				if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
+				if websocket.CloseStatus(err) != -1 || context.Cause(readCtx) == context.DeadlineExceeded {
 					if e := c.ErrChan; e != nil {
-						e <- &events.Error{Event: "connection closed due read timeout"}
+						msg := "connection closed"
+						if context.Cause(readCtx) == context.DeadlineExceeded {
+							msg = "connection closed due read timeout"
+						}
+						e <- &events.Error{Event: msg}
 					}
+					// Trigger reconnect via Connect loop logic (by closing connection, Connect loop will redial)
 					c.Cancel()
-					return c.conn[p].Close()
+					return err
 				}
 				return err
 			}
-			c.mu[p].RUnlock()
+
 			now := time.Now()
 			c.mu[p].Lock()
 			c.lastTransmit[p] = &now
 			c.mu[p].Unlock()
 
 			// Handle heartbeat text frames explicitly.
-			if mt == websocket.TextMessage {
+			if mt == websocket.MessageText {
 				switch string(data) {
 				case "pong":
 					// Received heartbeat response from server; nothing else to do.
