@@ -6,9 +6,7 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/json"
-	"errors"
 	"fmt"
-	"net"
 	"net/http"
 	"sync"
 	"time"
@@ -327,30 +325,25 @@ func (c *ClientWs) heartbeat(p bool) {
 	}
 }
 
+// receiver reads messages from the websocket connection and dispatches them.
 func (c *ClientWs) receiver(p bool) error {
+	c.mu[p].RLock()
+	conn := c.conn[p]
+	c.mu[p].RUnlock()
+	if conn == nil {
+		return fmt.Errorf("no connection")
+	}
+
+	// CloseRead дозволяє безпечно писати одночасно.
+	ctx := conn.CloseRead(c.ctx)
+
 	for {
 		select {
-		case <-c.ctx.Done():
+		case <-ctx.Done():
 			return c.handleCancel("receiver")
-
 		default:
-			c.mu[p].RLock()
-			conn := c.conn[p]
-			c.mu[p].RUnlock()
-			if conn == nil {
-				return fmt.Errorf("no connection")
-			}
-
-			mt, data, err := conn.Read(c.ctx)
+			mt, data, err := conn.Read(ctx)
 			if err != nil {
-				if errors.Is(err, net.ErrClosed) {
-					return nil
-				}
-
-				if sc := websocket.CloseStatus(err); sc != -1 {
-					return nil
-				}
-
 				if c.ErrChan != nil {
 					c.ErrChan <- &events.Error{Event: fmt.Sprintf("connection closed: %v", err)}
 				}
@@ -366,8 +359,10 @@ func (c *ClientWs) receiver(p bool) error {
 			if mt == websocket.MessageText {
 				switch string(data) {
 				case "pong":
+					// Received heartbeat response from the server; nothing else to do.
 					continue
 				case "ping":
+					// Server is pinging us using a text message: respond with "pong" via the sender.
 					go func() { c.sendChan[p] <- []byte("pong") }()
 					continue
 				}
@@ -375,13 +370,16 @@ func (c *ClientWs) receiver(p bool) error {
 
 			e := &events.Basic{}
 			if err := json.Unmarshal(data, e); err != nil {
+				// Не структурована подія – шлемо в RawEventChan, якщо є.
 				if c.RawEventChan != nil {
 					c.RawEventChan <- data
 				}
 				continue
 			}
 
-			go c.process(data, e)
+			go func() {
+				c.process(data, e)
+			}()
 		}
 	}
 }
