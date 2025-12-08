@@ -6,6 +6,7 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"sync"
@@ -317,10 +318,10 @@ func (c *ClientWs) receiver(p bool) error {
 			cancel()
 
 			if err != nil {
-				if websocket.CloseStatus(err) != -1 || context.Cause(readCtx) == context.DeadlineExceeded {
+				if websocket.CloseStatus(err) != -1 || errors.Is(context.Cause(readCtx), context.DeadlineExceeded) {
 					if e := c.ErrChan; e != nil {
 						msg := "connection closed"
-						if context.Cause(readCtx) == context.DeadlineExceeded {
+						if errors.Is(context.Cause(readCtx), context.DeadlineExceeded) {
 							msg = "connection closed due read timeout"
 						}
 						e <- &events.Error{Event: msg}
