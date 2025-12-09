@@ -27,7 +27,8 @@ type ClientWs struct {
 	Cancel              context.CancelFunc
 	StructuredEventChan chan interface{}
 	RawEventChan        chan []byte
-	ErrChan             chan *events.Error
+	ErrWsChan           chan error
+	ErrEventChan        chan *events.Error
 	SubscribeChan       chan *events.Subscribe
 	UnsubscribeCh       chan *events.Unsubscribe
 	LoginChan           chan *events.Login
@@ -316,8 +317,8 @@ func (c *ClientWs) receiver(p bool) {
 		cancel()
 
 		if err != nil {
-			if e := c.ErrChan; e != nil {
-				e <- &events.Error{Event: "connection closed. error: " + err.Error()}
+			if e := c.ErrWsChan; e != nil {
+				e <- err
 			}
 			c.Cancel()
 			break
@@ -375,8 +376,8 @@ func (c *ClientWs) process(data []byte, e *events.Basic) bool {
 	case "error":
 		e := events.Error{}
 		_ = json.Unmarshal(data, &e)
-		if c.ErrChan != nil {
-			c.ErrChan <- &e
+		if c.ErrEventChan != nil {
+			c.ErrEventChan <- &e
 		}
 		return true
 	case "subscribe":
