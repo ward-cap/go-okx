@@ -22,6 +22,8 @@ import (
 //
 // https://www.okex.com/docs-v5/en/#websocket-api
 type ClientWs struct {
+	context.Context
+
 	Cancel              context.CancelFunc
 	StructuredEventChan chan interface{}
 	RawEventChan        chan []byte
@@ -43,7 +45,6 @@ type ClientWs struct {
 	Private             *Private
 	Public              *Public
 	Trade               *Trade
-	ctx                 context.Context
 	logger              *zap.SugaredLogger
 }
 
@@ -63,12 +64,13 @@ func NewClient(
 ) *ClientWs {
 	ctx, cancel := context.WithCancel(ctx)
 	c := &ClientWs{
+		Context: ctx,
+		Cancel:  cancel,
+
 		logger:       logger,
 		apiKey:       apiKey,
 		secretKey:    []byte(secretKey),
 		passphrase:   passphrase,
-		ctx:          ctx,
-		Cancel:       cancel,
 		url:          url,
 		sendChan:     map[bool]chan []byte{true: make(chan []byte, 3), false: make(chan []byte, 3)},
 		conn:         make(map[bool]*websocket.Conn),
@@ -92,9 +94,9 @@ func (c *ClientWs) Connect(p bool) error {
 
 }
 
-func (c *ClientWs) Context() context.Context {
-	return c.ctx
-}
+//func (c *ClientWs) Context() context.Context {
+//	return c.ctx
+//}
 
 // Login
 //
@@ -215,7 +217,7 @@ func (c *ClientWs) WaitForAuthorization() error {
 
 func (c *ClientWs) dial(p bool) error {
 	c.mu[p].Lock()
-	conn, _, err := websocket.Dial(c.ctx, string(c.url[p]), nil)
+	conn, _, err := websocket.Dial(c, string(c.url[p]), nil)
 	if err != nil {
 		c.mu[p].Unlock()
 		return fmt.Errorf("dial error: %w", err)
@@ -245,7 +247,7 @@ func (c *ClientWs) sender(p bool) {
 				}
 			}
 
-			writeCtx, cancel := context.WithTimeout(c.ctx, writeWait)
+			writeCtx, cancel := context.WithTimeout(c, writeWait)
 			err := conn.Write(writeCtx, websocket.MessageText, data)
 			cancel()
 
@@ -277,7 +279,7 @@ func (c *ClientWs) sender(p bool) {
 					}
 				}
 			}
-		case <-c.ctx.Done():
+		case <-c.Done():
 			if c.logger != nil {
 				c.logger.Warn("connection is closed")
 			}
@@ -309,7 +311,7 @@ func (c *ClientWs) receiver(p bool) {
 		}
 
 		// Emulate SetReadDeadline using context timeout
-		readCtx, cancel := context.WithTimeout(c.ctx, pongWait)
+		readCtx, cancel := context.WithTimeout(c, pongWait)
 		mt, data, err := conn.Read(readCtx)
 		cancel()
 
