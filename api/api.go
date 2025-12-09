@@ -38,7 +38,7 @@ func NewClient(
 	}
 
 	r := rest.NewClient(apiKey, secretKey, passphrase, restURL, destination, logger)
-	c := ws.NewClient(ctx, apiKey, secretKey, passphrase, map[bool]okex.BaseURL{true: wsPriURL, false: wsPubURL})
+	c := ws.NewClient(ctx, apiKey, secretKey, passphrase, map[bool]okex.BaseURL{true: wsPriURL, false: wsPubURL}, logger)
 
 	return &Client{r, c, ctx}, nil
 }
