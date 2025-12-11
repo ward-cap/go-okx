@@ -321,7 +321,7 @@ func (c *ClientWs) receiver(p bool) {
 				select {
 				case e <- err:
 				default:
-					// closed or no one listen
+					// closed or no one listens
 				}
 			}
 			c.Cancel()
