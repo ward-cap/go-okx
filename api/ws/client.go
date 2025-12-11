@@ -318,7 +318,11 @@ func (c *ClientWs) receiver(p bool) {
 
 		if err != nil {
 			if e := c.ErrWsChan; e != nil {
-				e <- err
+				select {
+				case e <- err:
+				default:
+					// closed or no one listen
+				}
 			}
 			c.Cancel()
 			break
