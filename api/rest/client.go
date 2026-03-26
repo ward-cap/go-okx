@@ -44,6 +44,7 @@ func NewClient(
 	baseURL okex.BaseURL,
 	destination okex.Destination,
 	logger *zap.SugaredLogger,
+	client *http.Client,
 ) *ClientRest {
 	c := &ClientRest{
 		Logger:      logger,
@@ -53,6 +54,10 @@ func NewClient(
 		baseURL:     baseURL,
 		destination: destination,
 		client:      http.DefaultClient,
+	}
+
+	if client != nil {
+		c.client = client
 	}
 
 	c.Account = NewAccount(c)

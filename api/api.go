@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"net/http"
 
 	"github.com/ward-cap/go-okx"
 	"github.com/ward-cap/go-okx/api/rest"
@@ -22,6 +23,7 @@ func NewClient(
 	apiKey, secretKey, passphrase string,
 	destination okex.Destination,
 	logger *zap.SugaredLogger,
+	client *http.Client,
 ) (*Client, error) {
 	restURL := okex.RestURL
 	wsPubURL := okex.PublicWsURL
@@ -37,7 +39,7 @@ func NewClient(
 		wsPriURL = okex.DemoPrivateWsURL
 	}
 
-	r := rest.NewClient(apiKey, secretKey, passphrase, restURL, destination, logger)
+	r := rest.NewClient(apiKey, secretKey, passphrase, restURL, destination, logger, client)
 	c := ws.NewClient(ctx, apiKey, secretKey, passphrase, map[bool]okex.BaseURL{true: wsPriURL, false: wsPubURL}, logger)
 
 	return &Client{r, c, ctx}, nil

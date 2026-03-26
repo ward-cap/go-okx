@@ -123,13 +123,13 @@ type (
 		Sz        decimal.NullDecimalV2 `json:"sz"`
 		Pnl       decimal.NullDecimalV2 `json:"pnl"`
 		Fee       decimal.NullDecimalV2 `json:"fee"`
-		From      okex.AccountType      `json:"from,string"`
-		To        okex.AccountType      `json:"to,string"`
 		InstType  okex.InstrumentType   `json:"instType"`
-		MgnMode   okex.MarginMode       `json:"MgnMode"`
 		Type      okex.BillType         `json:"type,string"`
-		SubType   okex.BillSubType      `json:"subType,string"`
 		TS        okex.JSONTime         `json:"ts"`
+		//From      okex.AccountType      `json:"from,string"`
+		//To        okex.AccountType      `json:"to,string"`
+		//MgnMode   okex.MarginMode       `json:"MgnMode"`
+		//SubType   okex.BillSubType      `json:"subType,string"`
 	}
 	Config struct {
 		Level      string            `json:"level"`
