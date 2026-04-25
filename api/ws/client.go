@@ -365,13 +365,16 @@ func (c *ClientWs) receiver(p bool) {
 	}
 }
 
+// Sign returns the base64-encoded HMAC-SHA256 signature for the provided payload.
+func (c *ClientWs) Sign(payload string) string {
+	mac := hmac.New(sha256.New, c.secretKey)
+	mac.Write([]byte(payload))
+	return base64.StdEncoding.EncodeToString(mac.Sum(nil))
+}
+
 func (c *ClientWs) sign(method, path string) (ts, signature string) {
 	ts = strconv.FormatInt(time.Now().Unix(), 10)
-
-	mac := hmac.New(sha256.New, c.secretKey)
-	mac.Write([]byte(ts + method + path))
-
-	signature = base64.StdEncoding.EncodeToString(mac.Sum(nil))
+	signature = c.Sign(ts + method + path)
 	return
 }
 

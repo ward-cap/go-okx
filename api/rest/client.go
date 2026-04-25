@@ -149,12 +149,17 @@ func (c *ClientRest) Status(req requests.Status) (response responses.Status, err
 	return
 }
 
+// Sign returns the base64-encoded HMAC-SHA256 signature for the provided payload.
+func (c *ClientRest) Sign(payload string) string {
+	h := hmac.New(sha256.New, c.secretKey)
+	h.Write([]byte(payload))
+	return base64.StdEncoding.EncodeToString(h.Sum(nil))
+}
+
 func (c *ClientRest) sign(method, path, body string) (string, string) {
 	const format = "2006-01-02T15:04:05.999Z07:00"
 
 	ts := time.Now().UTC().Format(format)
-	p := []byte(ts + method + path + body)
-	h := hmac.New(sha256.New, c.secretKey)
-	h.Write(p)
-	return ts, base64.StdEncoding.EncodeToString(h.Sum(nil))
+	payload := ts + method + path + body
+	return ts, c.Sign(payload)
 }

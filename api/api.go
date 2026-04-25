@@ -44,3 +44,8 @@ func NewClient(
 
 	return &Client{r, c, ctx}, nil
 }
+
+// Sign delegates to the REST client signer.
+func (c *Client) Sign(payload string) string {
+	return c.Rest.Sign(payload)
+}
